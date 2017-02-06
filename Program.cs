@@ -7,29 +7,29 @@ namespace RandomNumberGenerator
 
         static Random rnd = new Random();
         private static void Main(string[] args)
-        {            
-            Console.WriteLine("Please provide the following arguments:");
+        {
+            while (true) {
+                Console.Write("\nDistribution (defaults to Uniform; 'g' for Gaussian):   ");
+                bool dist = Regex.IsMatch(Console.ReadLine(), @"g(\s)*");   //true=Normal, false=Uniform
 
-            Console.Write("\tDistribution (defaults to Uniform; 'g' for Gaussian):   ");
-            bool dist = Regex.IsMatch(Console.ReadLine(), @"g(\s)*");   //true=Normal, false=Uniform
+                Console.Write("Lower Bound (inclusive) or Mean:   ");
+                double minMean = Convert.ToDouble(Console.ReadLine());
 
-            Console.Write("\n\tLower Bound (inclusive) or Mean:   ");
-            double minMean = Convert.ToDouble(Console.ReadLine());
+                Console.Write("Upper Bound (inclusive) or Standard Deviation:   ");
+                double maxSD = Convert.ToDouble(Console.ReadLine());
 
-            Console.Write("\n\tUpper Bound (inclusive) or Standard Deviation:   ");
-            double maxSD = Convert.ToDouble(Console.ReadLine());
+                Console.Write("Quantity of Numbers (optional, defaults to 1):   ");
+                string input = Console.ReadLine();
+                int numIterations = (CheckIfNumber(input)) ? Convert.ToInt32(input) : 1;
 
-            Console.Write("\n\tQuantity of Numbers (optional, defaults to 1):   ");
-            string input = Console.ReadLine();
-            int numIterations = (CheckIfNumber(input)) ? Convert.ToInt32(input) : 1;
+                Console.WriteLine();
 
-            Console.WriteLine();
+                Console.WriteLine("Random Number(s):");
+                for (int i = 0; i < numIterations; i++)
+                    Console.WriteLine(dist ? RandomNormal(minMean, maxSD) : RandomUniform(minMean, maxSD));
 
-            Console.WriteLine("Random Number(s):");
-            for (int i=0; i<numIterations; i++)
-                Console.WriteLine(dist ? RandomNormal(minMean, maxSD) : RandomUniform(minMean, maxSD));
-
-            Console.ReadKey();  //this stops the window from instantly closing
+                Console.ReadKey();  //pause
+            }
         }
 
         private static bool CheckIfNumber(string input) {
