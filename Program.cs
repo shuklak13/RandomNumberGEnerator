@@ -1,36 +1,54 @@
 ﻿using System;
+using System.Text.RegularExpressions;
 
 namespace RandomNumberGenerator
 {
-    class Program
-    {
-        static void Main(string[] args)
-        {
-            Random rnd = new Random();
-            int[] input;
+    class Program {
 
-            do {
-                Console.WriteLine("In space-separated format, please provide the following arguments:");
-                Console.WriteLine("\tLower Bound (inclusive)");
-                Console.WriteLine("\tUpper Bound (inclusive)");
-                Console.WriteLine("\tQuantity of Numbers (optional)");
-                Console.WriteLine();
-                input = Array.ConvertAll(Console.ReadLine().ToString().Split(' '), int.Parse);
+        static Random rnd = new Random();
+        private static void Main(string[] args)
+        {            
+            Console.WriteLine("Please provide the following arguments:");
 
-                if (input.Length != 2 && input.Length != 3)
-                    Console.WriteLine("Please give 2 or 3 inputs.");
-            } while (input.Length != 2 && input.Length != 3);
+            Console.Write("\tDistribution (defaults to Uniform; 'g' for Gaussian):   ");
+            bool dist = Regex.IsMatch(Console.ReadLine(), @"g(\s)*");   //true=Normal, false=Uniform
 
-            int min = input[0];
-            int max = input[1];
-            int numIterations = (input.Length == 3) ? input[2] : 1;
+            Console.Write("\n\tLower Bound (inclusive) or Mean:   ");
+            double minMean = Convert.ToDouble(Console.ReadLine());
+
+            Console.Write("\n\tUpper Bound (inclusive) or Standard Deviation:   ");
+            double maxSD = Convert.ToDouble(Console.ReadLine());
+
+            Console.Write("\n\tQuantity of Numbers (optional, defaults to 1):   ");
+            string input = Console.ReadLine();
+            int numIterations = (CheckIfNumber(input)) ? Convert.ToInt32(input) : 1;
 
             Console.WriteLine();
+
             Console.WriteLine("Random Number(s):");
             for (int i=0; i<numIterations; i++)
-                Console.WriteLine(rnd.Next(min, max+1));
+                Console.WriteLine(dist ? RandomNormal(minMean, maxSD) : RandomUniform(minMean, maxSD));
 
             Console.ReadKey();  //this stops the window from instantly closing
+        }
+
+        private static bool CheckIfNumber(string input) {
+            int value;
+            return int.TryParse(input, out value);
+        }
+
+        private static int RandomUniform(double min, double max) {
+            //if for some reason input is a double, it will be truncated to an integer
+            return rnd.Next((int)min, (int) (max + 1));
+        }
+
+        //Box-Muller Transformation (converts a pair of uniforms into a normal)
+        private static double RandomNormal(double mean, double stdDev) {
+            double u1 = 1.0 - rnd.NextDouble();
+            double u2 = 1.0 - rnd.NextDouble();
+            double randStdNormal = Math.Sqrt(-2.0 * Math.Log(u1)) *
+                         Math.Sin(2.0 * Math.PI * u2); 
+            return mean + stdDev * randStdNormal; 
         }
     }
 }
