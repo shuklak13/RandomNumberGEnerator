@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Collections.Generic;
 using System.Text.RegularExpressions;
 
 namespace RandomNumberGenerator
@@ -6,28 +7,30 @@ namespace RandomNumberGenerator
     class Program {
 
         static Random rnd = new Random();
+        static String input;
         private static void Main(string[] args)
         {
             while (true) {
-                Console.Write("\nDistribution (defaults to Uniform; 'g' for Gaussian):   ");
-                bool dist = Regex.IsMatch(Console.ReadLine(), @"g(\s)*");   //true=Normal, false=Uniform
+                Console.Write("\nType 1 for Uniform RNG, 2 for Gaussian RNG, or 3 for List Randomizer:   ");
+                input = Console.ReadLine();
 
-                Console.Write("Lower Bound (inclusive) or Mean:   ");
-                double minMean = Convert.ToDouble(Console.ReadLine());
+                if (Regex.IsMatch(input, @"3(\s)*"))
+                    ListRandomizer();
+                else if (Regex.IsMatch(input, @"2(\s)*") || Regex.IsMatch(input, @"1(\s)*")) {
 
-                Console.Write("Upper Bound (inclusive) or Standard Deviation:   ");
-                double maxSD = Convert.ToDouble(Console.ReadLine());
+                    //The reason I read in as a string is so the user can skip by clicking enter
+                    Console.Write("Quantity of Numbers to Generate (optional, defaults to 1):   ");
+                    string qtyString = Console.ReadLine();
+                    int qty = (CheckIfNumber(qtyString)) ? Convert.ToInt32(qtyString) : 1;
 
-                Console.Write("Quantity of Numbers (optional, defaults to 1):   ");
-                string input = Console.ReadLine();
-                int numIterations = (CheckIfNumber(input)) ? Convert.ToInt32(input) : 1;
-
-                Console.WriteLine();
-
-                Console.WriteLine("Random Number(s):");
-                for (int i = 0; i < numIterations; i++)
-                    Console.WriteLine(dist ? RandomNormal(minMean, maxSD) : RandomUniform(minMean, maxSD));
-
+                    if (Regex.IsMatch(input, @"2(\s)*"))
+                        RNG_Gaussian(qty);
+                    if (Regex.IsMatch(input, @"1(\s)*"))
+                        RNG_Uniform(qty);
+                } else {
+                    Console.Write("Input unrecognized. Try again.\n\n");
+                    continue;
+                }
                 Console.ReadKey();  //pause
             }
         }
@@ -37,18 +40,70 @@ namespace RandomNumberGenerator
             return int.TryParse(input, out value);
         }
 
-        private static int RandomUniform(double min, double max) {
+        private static void RNG_Uniform(int qty) {
+            Console.Write("Lower Bound (inclusive) (optional, defaults to 1):   ");
+            string minString = Console.ReadLine();
+            int min = (CheckIfNumber(minString)) ? Convert.ToInt32(minString) : 1;
+
+            Console.Write("Upper Bound (inclusive):   ");
+            int max = Convert.ToInt32(Console.ReadLine());
+
+            Console.WriteLine();
+
+            Console.WriteLine("Random Number(s):");
+            for (int i = 0; i < qty; i++)
+                Console.WriteLine(Draw_Uniform(min, max));
+        }
+        private static int Draw_Uniform(int min, int max) {
             //if for some reason input is a double, it will be truncated to an integer
-            return rnd.Next((int)min, (int) (max + 1));
+            return rnd.Next(min, max + 1);
         }
 
+        private static void RNG_Gaussian(int qty) {
+            Console.Write("Mean (optional, defaults to 0):   ");
+            string meanString = Console.ReadLine();
+            double mean = (CheckIfNumber(meanString)) ? Convert.ToDouble(meanString) : 0;
+
+            Console.Write("Standard Deviation (recommendation: half of what 95% of data is within):   ");
+            double sd = Convert.ToDouble(Console.ReadLine());
+
+            Console.WriteLine();
+
+            Console.WriteLine("Random Number(s):");
+            for (int i = 0; i < qty; i++)
+                Console.WriteLine(Draw_Gaussian(mean, sd));
+        }
         //Box-Muller Transformation (converts a pair of uniforms into a normal)
-        private static double RandomNormal(double mean, double stdDev) {
+        private static double Draw_Gaussian(double mean, double stdDev) {
             double u1 = 1.0 - rnd.NextDouble();
             double u2 = 1.0 - rnd.NextDouble();
             double randStdNormal = Math.Sqrt(-2.0 * Math.Log(u1)) *
                          Math.Sin(2.0 * Math.PI * u2); 
             return mean + stdDev * randStdNormal; 
+        }
+
+        private static void ListRandomizer() {
+            Console.WriteLine("Type each element of the list, separated by a space.");
+            Console.WriteLine("End the list with a triple dash '---'\n");
+            List<string> list = new List<string>();
+            while (true) {
+                string elem = Console.ReadLine();
+                if (!elem.Equals("---"))
+                    list.Add(elem);
+                else
+                    break;
+            }
+            Shuffle(list).ForEach(Console.WriteLine);
+        }
+        private static List<string> Shuffle(List<string> list) {
+            for (var i = 0; i < list.Count; i++)
+                Swap(ref list, i, rnd.Next(i, list.Count));
+            return list;
+        }
+        private static void Swap(ref List<string> list, int a, int b) {
+            string temp = list[a];
+            list[a] = list[b];
+            list[b] = temp;
         }
     }
 }
